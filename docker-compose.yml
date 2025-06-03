@@ -1,0 +1,84 @@
+services:
+  # --- 1. PostgreSQL ---
+  postgres:
+    image: postgres:15
+    container_name: stock_postgres
+    environment:
+      POSTGRES_USER: stock_user
+      POSTGRES_PASSWORD: stock_pass
+      POSTGRES_DB: stockdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # --- 2. Apache Airflow (Custom Image) ---
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    image: custom_airflow:latest
+    container_name: stock_airflow
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://stock_user:stock_pass@postgres/stockdb
+      AIRFLOW__CORE__FERNET_KEY: "nGLaxveZCqWrj7gjLm9_CfjDRWZxlSCwTNUXHtP4UhE="
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__API__AUTH_BACKEND: "airflow.api.auth.backend.basic_auth"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    command: >
+      bash -c "airflow db init &&
+               airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com &&
+               airflow webserver & airflow scheduler"
+
+  # --- 3. MLflow Tracking Server ---
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: stock_mlflow
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_artifacts:/mlflow/artifacts
+    depends_on:
+      - postgres
+    command: >
+      mlflow server
+        --backend-store-uri postgresql://stock_user:stock_pass@postgres/stockdb
+        --default-artifact-root /mlflow/artifacts
+        --host 0.0.0.0
+
+  # --- 4. Streamlit Dashboard ---
+  streamlit:
+    image: python:3.10-slim
+    container_name: stock_streamlit
+    working_dir: /app
+    volumes:
+      - ./streamlit:/app
+    ports:
+      - "8501:8501"
+    depends_on:
+      - postgres
+    command: >
+      bash -c "pip install --no-cache-dir streamlit &&
+               streamlit run app.py --server.port 8501 --server.address 0.0.0.0"
+
+  # --- 5. Prometheus ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: stock_prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+volumes:
+  pgdata:
+  mlflow_artifacts:

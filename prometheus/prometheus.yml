@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  # Contoh job Airflow (jika Airflow expose /metrics)
+  - job_name: 'airflow'
+    static_configs:
+      - targets: ['airflow:8080']
+
+  # Contoh job MLflow (jika expose /metrics)
+  # - job_name: 'mlflow'
+  #   static_configs:
+  #     - targets: ['mlflow:5000']

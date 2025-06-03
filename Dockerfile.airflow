@@ -1,0 +1,23 @@
+# Dockerfile.airflow
+FROM apache/airflow:2.6.3
+
+USER root
+
+# 1. Install OS‑level dependency untuk psycopg2
+RUN apt-get update \
+ && apt-get install -y gcc libpq-dev \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+# 2. Copy requirements dan set kepemilikan ke user airflow
+COPY requirements_airflow.txt /tmp/requirements_airflow.txt
+RUN chown airflow: /tmp/requirements_airflow.txt
+
+# 3. Pindah ke user airflow untuk menginstall Python packages
+USER airflow
+
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+ && pip install --no-cache-dir -r /tmp/requirements_airflow.txt
+
+# Kembali ke user airflow (sudah user airflow, tapi kita tulis eksplisit)
+USER airflow
