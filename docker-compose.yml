@@ -37,9 +37,12 @@ services:
                airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com &&
                airflow webserver & airflow scheduler"
 
-  # --- 3. MLflow Tracking Server ---
+  # --- 3. MLflow Tracking Server (custom build) ---
   mlflow:
-    image: ghcr.io/mlflow/mlflow:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.mlflow
+    image: custom_mlflow:latest
     container_name: stock_mlflow
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000

@@ -1,6 +1,8 @@
-apache-airflow-providers-postgres
-pandas
-yfinance
-sqlalchemy
-psycopg2-binary
-pymysql
+    apache-airflow-providers-postgres
+    pandas
+    yfinance
+    sqlalchemy
+    psycopg2-binary
+    pymysql
+    scikit-learn
+    mlflow

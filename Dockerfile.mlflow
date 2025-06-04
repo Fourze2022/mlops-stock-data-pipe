@@ -1,0 +1,11 @@
+# Dockerfile.mlflow
+FROM ghcr.io/mlflow/mlflow:latest
+
+# Kita tetap pakai root untuk install psycopg2-binary
+USER root
+
+# Install psycopg2-binary agar MLflow bisa connect ke Postgres
+RUN pip install --no-cache-dir psycopg2-binary
+
+# Kembali ke user default (biasanya sudah root di base image ini)
+# Tidak perlu menulis 'USER mlflow' karena user tersebut memang tidak ada
