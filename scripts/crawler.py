@@ -26,11 +26,11 @@ def main(ticker):
         sys.exit(1)
 
     # 2. Hitung tanggal hari ini (YYYY-MM-DD) untuk start_date dan end_date
-    today = pd.Timestamp.now().normalize()  # midnight hari ini
-    start_date = today.strftime("%Y-%m-%d")
-    end_date = start_date  # jika hanya ingin data hari ini
+    yesterday = pd.Timestamp.now().normalize() - pd.Timedelta(days=1)
+    start_date = yesterday.strftime("%Y-%m-%d")
+    end_date = start_date
 
-    # 3. Download data historis via yfinance (hanya tanggal hari ini)
+    # 3. Download data historis via yfinance
     data = yf.download(ticker, start=start_date, end=end_date, progress=False)
     if data.empty:
         print(f"Tidak ada data untuk {ticker} pada tanggal {start_date}.")
